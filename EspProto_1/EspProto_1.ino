@@ -25,7 +25,8 @@ SemaphoreHandle_t xMutex = NULL;
 AsyncWebServer server(80);
 // Create a WebSocket object
 bool fftVar = false;
-float sampleArray[1024];
+float sampleArrayChanne11[1024];
+float sampleArrayChannel2[1024];
 AsyncWebSocket ws("/ws");
 
 const uint8_t ad9833_sclk_pin = 17;
@@ -41,7 +42,7 @@ int ArrayForScope[] = {0, 0, 0, 0, 0, 0, 0};
 int ArrayForFFT[] = {0, 0, 0, 0, 0};
 int ArrayForWaveform[] = {0, 0, 0};
 String message = "";
-
+void clearChannel(int channel_number);
 // Initialize SPIFFS
 void initFS() {
   Serial.println("In fs");
@@ -101,7 +102,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       ArrayForFFT[1] = ObjectJson["Windowstyle"];
       ArrayForFFT[2] = ObjectJson["centreFrequency"];
       ArrayForFFT[3] = ObjectJson["bandwith"];
-      ArrayForFFT[4] = ObjectJson["scanRate"];
+      ArrayForFFT[4] = ObjectJson["channelForFFT"];
       Serial.print("onOff: ");
       Serial.println(ArrayForFFT[0]);
       Serial.print("Windowstyle: ");
@@ -110,7 +111,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       Serial.println(ArrayForFFT[2]);
       Serial.print("bandwith: ");
       Serial.println(ArrayForFFT[3]);
-      Serial.print("scanRate: ");
+      Serial.print("channelForFFT: ");
       Serial.println(ArrayForFFT[4]);
     }
 
@@ -153,84 +154,89 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       break;
   }
 }
-//void styleFftData(int style) {
-//  switch (style) {
-//    case 0:
-//      Serial.println("Style 0 flattop");
-//      for (int i = 0; i < 2048; i++) {
-//        fft.samples[i] = fft.samples[i] * (0.21557895 - 0.41663158 * cos(2 * PI * i / (1024 - 1)) + 0.277263158 * cos(4 * PI * i / (1024 - 1)) - 0.083578947 * cos(6 * PI * i / (1024 - 1)) + 0.006947368 * cos(8 * PI * i / (1024 - 1)));
-//      }
-//      Serial.println(fft.samples[342]);
-//      break;
-//    case 1:
-//      Serial.println("Style 1 hanning");
-//      for (int i = 0; i < 2048; i++) {
-//        fft.samples[i] = fft.samples[i] * (0.5 - 0.5 * cos(2 * PI * i / (1024)));
-//      }
-//      Serial.println(fft.samples[342]);
-//      break;
-//    case 2:
-//      Serial.println("Style 2 uniform");
-//      break;
-//  }
-//}
+void styleFftData(int style) {
+  switch (style) {
+    case 0:
+      Serial.println("Style 0 flattop");
+      for (int i = 0; i < 1024; i++) {
+        fft_signal[i] = fft_signal[i] * (0.21557895 - 0.41663158 * cos(2 * PI * i / (1024 - 1)) + 0.277263158 * cos(4 * PI * i / (1024 - 1)) - 0.083578947 * cos(6 * PI * i / (1024 - 1)) + 0.006947368 * cos(8 * PI * i / (1024 - 1)));
+      }
+      break;
+    case 1:
+      Serial.println("Style 1 hanning");
+      for (int i = 0; i < 1024; i++) {
+        fft_signal[i] = fft_signal[i] * (0.5 - 0.5 * cos(2 * PI * i / (1024)));
+      }
+      break;
+    case 2:
+      Serial.println("Style 2 uniform");
+      break;
+  }
+}
 
 void task1FFT(void *parameter) {
   delay(1000);
   while (1) {
-  xSemaphoreTake(xMutex, portMAX_DELAY);
-  if (ArrayForScope[3] == 1 || ArrayForFFT[0] == 1) {
-        if (fftVar == true) {
-          String outputFFT;
-          DynamicJsonDocument docFFT(20000);
-          JsonArray dataFFT = docFFT.createNestedArray("data");
-          fft_config_t *real_fft_plan = fft_init(FFT_N, FFT_REAL, FFT_FORWARD, fft_input, fft_output);
-          for (int k = 0 ; k < FFT_N ; k++)
+    xSemaphoreTake(xMutex, portMAX_DELAY);
+    if (ArrayForScope[3] == 1 || ArrayForFFT[0] == 1) {
+      if (fftVar == true) {
+        String outputFFT;
+        DynamicJsonDocument docFFT(20000);
+        JsonArray dataFFT = docFFT.createNestedArray("data");
+        styleFftData(1);
+        fft_config_t *real_fft_plan = fft_init(FFT_N, FFT_REAL, FFT_FORWARD, fft_input, fft_output);
+        for (int k = 0 ; k < FFT_N ; k++)
           real_fft_plan->input[k] = (float)fft_signal[k];
-          fft_execute(real_fft_plan);
-          for (int k = 1 ; k < real_fft_plan->size / 2 ; k++)
-            { 
-              float mag = sqrt(pow(real_fft_plan->output[2*k],2) + pow(real_fft_plan->output[2*k+1],2))/1;
-              float mag1 = round(mag*1000)/1000;
-              //float freq = k*5.0/TOTAL_TIME;
-              //sprintf(print_buf,"%f Hz : %f", freq, mag);
-              //Serial.println(print_buf);
-              dataFFT.add(mag1);
-            }
-            
-            serializeJson(docFFT,outputFFT);
-            Serial.println("Test");
-            Serial.println(ESP.getFreeHeap());
-            ws.textAll(outputFFT);
-            clearArray();
-            dataFFT.clear();
-            outputFFT = "";
-            fft_destroy(real_fft_plan);
-            Serial.println("Test2");
-            Serial.println(ESP.getFreeHeap());
+        fft_execute(real_fft_plan);
+        for (int k = 1 ; k < real_fft_plan->size / 2 ; k++)
+        {
+          float mag = sqrt(pow(real_fft_plan->output[2 * k], 2) + pow(real_fft_plan->output[2 * k + 1], 2)) / 1;
+          int mag1 = mag * 100;
+          //float freq = k*5.0/TOTAL_TIME;
+          //sprintf(print_buf,"%f Hz : %d", mag, mag1);
+          //Serial.println(print_buf);
+          dataFFT.add(mag1);
         }
-        else{
-          String outputOSS;
-          DynamicJsonDocument docOSS(20000);
-          JsonArray dataOSS = docOSS.createNestedArray("data");
-          for(int i = 0; i < 1024; i++){
-            dataOSS.add(sampleArray[i]);
-          }
-          
-          serializeJson(docOSS,outputOSS);
-          Serial.println(ESP.getFreeHeap());
-          ws.textAll(outputOSS);
-          clearArray();
-          dataOSS.clear();
-          outputOSS = "";
-        }
+
+        serializeJson(docFFT, outputFFT);
+        //        Serial.println("Test");
+        //        Serial.println(ESP.getFreeHeap());
+        ws.textAll(outputFFT);
+        clearChannel(1);
+        dataFFT.clear();
+        outputFFT = "";
+        fft_destroy(real_fft_plan);
+        //        Serial.println("Test2");
+        Serial.println(ESP.getFreeHeap());
       }
-      else{
+      else {
+        float test1 = 120;
+        String outputOSS;
+        DynamicJsonDocument docOSS(40000);
+        JsonArray dataOSS = docOSS.createNestedArray("data");
+        JsonArray dataOSS2 = docOSS.createNestedArray("data1");
+        for (int i = 0; i < 1024; i++) {
+          int samplesTest = sampleArrayChanne11[i] * 100;
+          dataOSS.add(samplesTest);
         }
-  xSemaphoreGive(xMutex);
-  vTaskDelay(100 / portTICK_PERIOD_MS);
+        for (int i = 0; i < 1024; i++) {
+          int samplesTest = sampleArrayChannel2[i] * 100;
+          dataOSS2.add(samplesTest);
+        }
+        serializeJson(docOSS, outputOSS);
+        Serial.println(ESP.getFreeHeap());
+        ws.textAll(outputOSS);
+        clearChannel(1);
+        dataOSS.clear();
+        outputOSS = "";
+      }
     }
+    else {
+    }
+    xSemaphoreGive(xMutex);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
+}
 void task2(void *parameter)
 {
   while (1) {
@@ -239,24 +245,39 @@ void task2(void *parameter)
     if (true) {
       for (int i = 0; i < 1024; i++) {
         //this generates and stacks values like the old one without clearing aslo values to large
-        float sine = (2 * sin(2 * M_PI * 100 * i /1000))+(2 * sin(2 * M_PI * 10 * i /1000));
-        
-        sampleArray[i] = sine;
-        fft_signal[i] = sine;
-        //Serial.println(fft_signal[i]);
+        float sine = 2 * sin(2 * M_PI * 200 * i / 1000);
+        float sine2 = 2 * sin(2 * M_PI * 10 * i / 1000);
+        //Serial.println(sine);
+        sampleArrayChanne11[i] = sine;
+        sampleArrayChannel2[i] = sine2;
+        if(ArrayForFFT[4] == 1){
+          fft_signal[i] = sine;
+          //Serial.println(fft_signal[i]);
+        }
+        else{
+          fft_signal[i] = sine2;
+        }
       }
       //clearArray();
     }
     else {
     }
     xSemaphoreGive(xMutex);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 }
-void clearArray() {
-  for (int x = 0; x < 1024; x++)
-  {
-    sampleArray[x] = 0;
+void clearChannel(int channel_number) {
+  if (channel_number == 1) {
+    for (int x = 0; x < 1024; x++)
+    {
+      sampleArrayChanne11[x] = 0;
+    }
+  }
+  else {
+    for (int x = 0; x < 1024; x++)
+    {
+      sampleArrayChannel2[x] = 0;
+    }
   }
 }
 void taskRealSamples(void *parameter) {
@@ -266,7 +287,7 @@ void taskRealSamples(void *parameter) {
       //if(ArrayForScope[3] == 1 || ArrayForFFT[0] == 1){
       for (int i = 0; i < 1024; i++) {
         potValue = analogRead(potPin);
-        sampleArray[i] = potValue;
+        sampleArrayChanne11[i] = potValue;
         fft_signal[i] = potValue;
       }
     }

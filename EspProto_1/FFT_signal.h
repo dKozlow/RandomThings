@@ -13,5 +13,4 @@ float fundamental_freq = 0;
  * Frequency: 5 Hz
  * Amplitude: 0.25g
 */
-double fft_signal[FFT_N];
-double fft_signal_test[FFT_N_TEST] = {0, 0, 1, 0, 4, 0, 9, 0, 2, 0, 3, 0, 4, 0, 5, 0};
+float fft_signal[FFT_N];
