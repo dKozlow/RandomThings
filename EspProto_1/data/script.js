@@ -34,9 +34,9 @@ function onClose(event) {
 function onMessage(event) {
     dataArray = JSON.parse(event.data).data
     dataArray2 = JSON.parse(event.data).data1
-    //console.log(dataArray2)
-    console.log(JSON.parse(event.data).data1.length)
-    console.log(JSON.parse(event.data).data.length)
+    console.log(event.data)
+    //console.log(JSON.parse(event.data).data1.length)
+    //console.log(JSON.parse(event.data).data.length)
 }
 
 class Graph {
