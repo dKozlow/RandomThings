@@ -1,0 +1,26 @@
+# # File gsaved with Nlview version 6.3.8  2013-12-19 bk=1.2992 VDI=34 GEI=35
+# 
+preplace inst embedded_system.onchip_memory2_0 -pg 1 -lvl 3 -y 330
+preplace inst embedded_system.clk_0 -pg 1 -lvl 1 -y 190
+preplace inst embedded_system -pg 1 -lvl 1 -y 40 -regy -20
+preplace inst embedded_system.temperature -pg 1 -lvl 3 -y 710
+preplace inst embedded_system.nios2_qsys_0 -pg 1 -lvl 2 -y 150
+preplace inst embedded_system.LEDs -pg 1 -lvl 3 -y 610
+preplace inst embedded_system.humidity -pg 1 -lvl 3 -y 30
+preplace inst embedded_system.switches -pg 1 -lvl 3 -y 410
+preplace inst embedded_system.timer_0 -pg 1 -lvl 3 -y 230
+preplace inst embedded_system.jtag_uart_0 -pg 1 -lvl 3 -y 130
+preplace inst embedded_system.hex01 -pg 1 -lvl 3 -y 510
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)LEDs.external_connection,(SLAVE)embedded_system.leds) 1 0 3 NJ 640 NJ 640 NJ
+preplace netloc INTERCONNECT<net_container>embedded_system</net_container>(MASTER)clk_0.clk_reset,(SLAVE)timer_0.reset,(SLAVE)LEDs.reset,(SLAVE)nios2_qsys_0.reset_n,(SLAVE)jtag_uart_0.reset,(SLAVE)switches.reset,(SLAVE)humidity.reset,(SLAVE)onchip_memory2_0.reset1,(SLAVE)temperature.reset,(SLAVE)hex01.reset,(MASTER)nios2_qsys_0.jtag_debug_module_reset) 1 1 2 290 760 600
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)switches.external_connection,(SLAVE)embedded_system.switches) 1 0 3 NJ 440 NJ 440 NJ
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)embedded_system.temperature,(SLAVE)temperature.external_connection) 1 0 3 NJ 740 NJ 740 NJ
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)embedded_system.hex01,(SLAVE)hex01.external_connection) 1 0 3 NJ 540 NJ 540 NJ
+preplace netloc FAN_OUT<net_container>embedded_system</net_container>(SLAVE)jtag_uart_0.irq,(SLAVE)timer_0.irq,(MASTER)nios2_qsys_0.d_irq) 1 2 1 620
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)embedded_system.humidity,(SLAVE)humidity.external_connection) 1 0 3 NJ 60 NJ 60 NJ
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)embedded_system.reset,(SLAVE)clk_0.clk_in_reset) 1 0 1 NJ
+preplace netloc EXPORT<net_container>embedded_system</net_container>(SLAVE)clk_0.clk_in,(SLAVE)embedded_system.clk) 1 0 1 NJ
+preplace netloc FAN_OUT<net_container>embedded_system</net_container>(SLAVE)temperature.clk,(SLAVE)switches.clk,(SLAVE)hex01.clk,(SLAVE)nios2_qsys_0.clk,(SLAVE)timer_0.clk,(MASTER)clk_0.clk,(SLAVE)humidity.clk,(SLAVE)jtag_uart_0.clk,(SLAVE)LEDs.clk,(SLAVE)onchip_memory2_0.clk1) 1 1 2 310 660 640
+preplace netloc INTERCONNECT<net_container>embedded_system</net_container>(SLAVE)switches.s1,(SLAVE)humidity.s1,(SLAVE)temperature.s1,(SLAVE)timer_0.s1,(MASTER)nios2_qsys_0.instruction_master,(SLAVE)nios2_qsys_0.jtag_debug_module,(SLAVE)jtag_uart_0.avalon_jtag_slave,(SLAVE)LEDs.s1,(MASTER)nios2_qsys_0.data_master,(SLAVE)hex01.s1,(SLAVE)onchip_memory2_0.s1) 1 1 2 330 780 580
+levelinfo -pg 1 0 80 870
+levelinfo -hier embedded_system 90 120 360 710 860
