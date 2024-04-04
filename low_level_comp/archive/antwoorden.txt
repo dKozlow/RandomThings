@@ -1,0 +1,28 @@
+Voor SPI moeten we de USI gebruiken in three-wire mode. Dit staat beschreven in sectie 15.4.1 van het datasheet van ATtiny85.
+
+De namen en nummers van de pinnen die we moeten gebruiken voor SCLK, MOSI en MISO zijn als volgt:
+
+SCLK (Serial Clock) wordt geleverd op pin PB2 (pin 7 op de ATtiny85).
+MOSI (Master Out Slave In) wordt geleverd op pin PB0 (pin 5 op de ATtiny85).
+MISO (Master In Slave Out) wordt geleverd op pin PB1 (pin 6 op de ATtiny85).
+Voor de SPI-communicatie moeten de pinnen als volgt geconfigureerd worden:
+
+SCLK (PB2) moet worden geconfigureerd als output, omdat het de klokpuls levert.
+MOSI (PB0) moet worden geconfigureerd als output, omdat het gegevens naar de slave stuurt.
+MISO (PB1) moet worden geconfigureerd als input, omdat het gegevens ontvangt van de slave.
+
+
+
+Om de juiste modus in te stellen en een externe klok te gebruiken met de opgaande flank, moeten bepaalde bits in het USICR-register worden ingesteld volgens §15.5.4 van het datasheet van de ATtiny85.
+
+De relevante bits in het USICR-register voor het instellen van de USI-modus en het selecteren van de externe klok met de opgaande flank zijn:
+
+USIWM1 en USIWM0: Deze bits worden gebruikt om de USI-modus in te stellen. Voor SPI-communicatie moeten ze worden ingesteld op 0 en 1, respectievelijk, wat overeenkomt met de drie-draads modus.
+
+USICS1 en USICS0: Deze bits worden gebruikt om de bron van het kloksignaal te selecteren. Om een externe klok met de opgaande flank te gebruiken, moeten deze bits worden ingesteld op 1 en 0, respectievelijk.
+
+Dus, om de juiste modus in te stellen en een externe klok met de opgaande flank te gebruiken, moeten de volgende bits worden ingesteld in het USICR-register:
+USIWM1 = 0
+USIWM0 = 1
+USICS1 = 1
+USICS0 = 0
